@@ -4,6 +4,7 @@ class Move{
   public int[] from = new int[2];
   public int[] to = new int[2]; 
   public int[] middle = new int[2];
+  public boolean valid = true;
 
   Move(int fi, int fj, int ti, int tj){
     from[0] = fi;
@@ -12,6 +13,9 @@ class Move{
     to[1] = tj;
     middle[0] = (fi + ti) / 2;
     middle[1] = (fj + tj) / 2;
+    if (fi==0 && fj==0 && ti==0 && tj==0){
+    	valid = false;
+    }
   }
 
   public void PrintMove(){
@@ -135,41 +139,48 @@ class GameState {
 
 class Main {
   public static GameState current = new GameState();
-  public static GameState option_state;
-  public static Move least_move;
-  public static int least_cost;
-  public static int option_cost;
-  public static Vector<Move> options = new Vector<>();
   public static Vector<Move> move_trail = new Vector<>();
   public static boolean found = false;
 
-  public static void main(String[] args) {
+  public static Move FindBest(GameState gs, int maxDepth){
+  	int least_cost = 90;
+  	Move least_move = new Move(0,0,0,0);
+  	Vector<Move> options = gs.ListMoveOptions();
+  	for (int i=0;i<options.size();i++){
+  		int test_cost = DFS(gs.MakeMove(options.get(i)), maxDepth);
+  		if (test_cost < least_cost){
+  			least_cost = test_cost;
+  			least_move = options.get(i);
+  		}
+  	}
+  	return least_move;
+  }
 
-    while (!found){
-      options = current.ListMoveOptions();
-      least_cost = 90;
-      if (options.size() == 0){
-        break;
-      }
-      for (int i=0;i<options.size();i++){       // find the least cost option
-        option_state = current.MakeMove(options.get(i));
-        option_cost = option_state.Cost();
-        // System.out.println("considering move:")
-        // options.get(i).PrintMove();
-        // System.out.println("this has a cost of: " + Integer.toString(option_cost) + '\n');
-        if (option_cost < least_cost){
-          least_cost = option_cost;
-          least_move = options.get(i);
-        }
-      } // found least cost option
-      move_trail.add(least_move);
-      current = current.MakeMove(least_move);
-      if (current.IsGoal()){
-        found = true;
-      }
-    }// finished finding path
+  public static int DFS(GameState gs, int maxDepth){
+  	Vector<Move> options = gs.ListMoveOptions();
+  	if (maxDepth > 1 && options.size() != 0){		// recursive case
+		int ll_cost = 90;
+  		for (int i=0;i<options.size();i++){
+  			int test_cost = DFS(gs.MakeMove(options.get(i)), maxDepth-1);
+  			if (test_cost < ll_cost){
+  				ll_cost = test_cost;
+  			}
+  		}
+  		return ll_cost;
+  	} else {							// base case
+  		int ll_cost = 90;
+  		for (int i=0;i<options.size();i++){
+  			int test_cost = gs.MakeMove(options.get(i)).Cost();
+  			if (test_cost < ll_cost){
+  				ll_cost = test_cost;
+  			}
+  		}
+  		return ll_cost;
+  	}
+  }
 
-    System.out.println("finished with " + Integer.toString(move_trail.size()) 
+  public static void PrintPath(){
+  	System.out.println("finished with " + Integer.toString(move_trail.size()) 
       + " moves and goal found: " + Boolean.toString(found));
 
     GameState justadecoration = new GameState();
@@ -179,7 +190,19 @@ class Main {
       justadecoration.PrintBoard();
       System.out.println();
     }
+    System.out.println("last state has a cost of: " + justadecoration.Cost());
+  }
 
+  public static void main(String[] args) {
+    while (!found){
+    	Move next_move = FindBest(current, 3);
+    	if (!next_move.valid){
+    		break;
+    	}
+    	move_trail.add(next_move);
+    	current = current.MakeMove(next_move);
+    }
+    PrintPath();
   }
 }
 
