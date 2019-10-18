@@ -24,9 +24,18 @@ The difficulty here is that even as humans, we think ahead. When you play checke
 they're clearly going to jump me so I'm not gonna do that". This is kind of like a miniature depth first search 
 that allows us to teleport around bad decisions that seem fine in the moment.
 
-10/17/19
 After implimenting this short-distance look-ahead feature, the heuristic seems to do worse in most cases.
 At each move, instead of checking the best cost out of the moves available, it checks the best cost out of 
 the leaves of a short DFS on a given depth. Kind of like thinking  a couple steps ahead at each move during
 a game of checkers. I tested a few different depths on this, and the best results are at 3 nodes deep. This is 
 surprising, because I would've thought it would only get more accurate as I increase the checking depth.
+
+I'm now trying to impliment an admissable heuristic for an A* search. Unfortunately it's still running, so I think 
+my heuristic could use some work. The reason it's taking so long is because of nested loops. In the raw DFS, 
+There was only 2 tasks per node expansion. (checking to see if it was the goal, and loading children into the 
+stack). Now with A*, each node expansion has to load the children, and sort the entire stack according to the
+f(n) = g(n) + h(n) formula, which means checking the cost of each node and checking the number of moves 
+made to get to that node. Each of those are 2 nested for-loops iterating over the board. The sorting itself is 
+a simple merge-sort, which takes O(nlogn) time.
+    Technically, the cost comparison doesn't count as part of the overall time-complexity because it is constant
+for every node, but I would have to be really naive to say it doesnt make the darn thing take longer.
